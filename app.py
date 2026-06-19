@@ -344,22 +344,34 @@ def extract_best_content(full_text, job_title):
     scored.sort(key=lambda x: x[0], reverse=True)
 
     if not scored:
-        # Fallback: just return truncated raw text
-        preview = text[:200] + "…" if len(text) > 200 else text
-        expanded = text[:397] + "…" if len(text) > 400 else text
+        # Fallback: preview = first 200 chars, expanded = rest (no repeat)
+        if len(text) > 200:
+            preview = text[:200] + "…"
+            expanded = text[200:]
+        else:
+            preview = text
+            expanded = ""
+        if len(expanded) > 397:
+            expanded = expanded[:397] + "…"
+        if not expanded:
+            expanded = preview
         return preview, expanded
 
     # Preview: best scoring paragraph, max 200 chars
     best_para = scored[0][1]
-    preview = best_para[:200] + "…" if len(best_para) > 200 else best_para
+    preview_source = best_para.strip()
+    preview = preview_source[:200] + "…" if len(preview_source) > 200 else preview_source
 
-    # Expanded: top-scoring paragraphs up to 400 chars, no duplicates
+    # Expanded: next best paragraphs up to 400 chars, SKIP the preview source
     expanded_parts = []
     length = 0
     for _, p in scored:
         if len(expanded_parts) >= 3:
             break
-        # Deduplicate (skip if very similar to something already included)
+        # Skip the paragraph used for preview
+        if p.strip() == preview_source:
+            continue
+        # Deduplicate
         if any(expanded_parts and (p[:60] in ep or ep[:60] in p) for ep in expanded_parts):
             continue
         if length + len(p) > 400:
@@ -370,9 +382,22 @@ def extract_best_content(full_text, job_title):
         expanded_parts.append(p)
         length += len(p)
 
-    expanded = "\n\n".join(expanded_parts) if expanded_parts else preview
-    if len(expanded) > 400:
-        expanded = expanded[:397] + "…"
+    if expanded_parts:
+        expanded = "\n\n".join(expanded_parts)
+        if len(expanded) > 400:
+            expanded = expanded[:397] + "…"
+    else:
+        # No other paragraphs — show remaining of preview source
+        rest = preview_source[200:] if len(preview_source) > 200 else ""
+        expanded = rest[:397] + "…" if len(rest) > 400 else rest
+
+    # Final safety: strip any preview overlap from expanded
+    preview_plain = preview.replace("…", "").strip()
+    while expanded.startswith(preview_plain) and len(expanded) > len(preview_plain):
+        expanded = expanded[len(preview_plain):].strip()
+    if not expanded:
+        # No rest — just return preview as both
+        expanded = preview
 
     return preview, expanded
 
