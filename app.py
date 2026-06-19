@@ -197,206 +197,74 @@ def extract_job_meta(full_text, job_title, job_type):
 
 
 def extract_best_content(full_text, job_title):
-    """Extract smart preview + concise expandable text from a job description.
-    Strips noise, picks the most work-relevant paragraphs.
-    Returns (preview, expanded)."""
+    """Extract ultra-concise keyword preview + full clean expanded text."""
     if not full_text or len(full_text.strip()) < 20:
         return full_text or "", ""
 
     text = full_text.strip()
+    lower = text.lower()
 
-    # Common RSS/intro noise lines to filter out entirely
-    noise_prefixes = (
-        "headquarters:", "url:", "compensation amount:",
-        "please mention the word", "when applying, tell them you found",
-        "updated:", "location:", "type:",
-    )
+    bits = []
 
-    # Corporate blabla — big penalty
-    blabla_patterns = (
-        "about the company", "our story", "company description",
-        "at our company", "is an equal", "we are an equal",
-        "thank you for", "thanks for", "our mission",
-        "we're building a world", "we are a high growth",
-        "we are dedicated to", "we are committed to",
-        "we are looking to hire", "all qualified applicants",
-        "diverse workforce", "we celebrate", "we strive",
-        "join our team of", "we're proud to", "we're excited to",
-        "does not discriminate", "encourages applications from",
-    )
+    # Tech skills detected
+    skills_found = []
+    for skill in ["Python","JavaScript","TypeScript","Java","C++","C#","Ruby","PHP","Rust","SQL",
+                  "React","Angular","Vue.js","HTML/CSS","Node.js","Django","Flask","Rails","Spring",
+                  "AWS","GCP","Azure","Docker","Kubernetes","Terraform","Git","Linux",
+                  "Machine Learning","TensorFlow","PyTorch","Tableau","Power BI"]:
+        sk = re.search(r'\b' + re.escape(skill.lower()) + r'\b', lower)
+        if sk and skill not in skills_found:
+            skills_found.append(skill)
+    if skills_found:
+        bits.append("Skills: " + ", ".join(skills_found[:4]))
 
-    # Keywords that signal real job content
-    work_signal_words = (
-        "salary", "requirements", "qualifications", "experience",
-        "skills", "responsibilities", "what you\'ll do", "about you",
-        "we\'re looking for", "you have", "you\'ll work", "you will",
-        "must have", "nice to have", "preferred",
-        "what we\'re looking for", "who you are",
-        "key responsibilities", "role requirements",
-        "your profile", "what you bring",
-        "budget", "equity", "benefits", "compensation",
-        "tech stack", "tools", "framework", "platform",
-        "senior", "lead", "head of", "manager",
-        "years of experience", "bachelor", "degree",
-        "proficiency in", "expertise in", "knowledge of",
-        "familiar with", "experience with", "fluent in",
-    )
+    # Salary (only meaningful amounts: 4+ digits or 2 digits + k)
+    sal = re.search(r'[$\u20ac\u00a3][\d,]+(?:k|K|,\d{3})(?:\s*[-\u2013]\s*[$\u20ac\u00a3]?[\d,]+(?:k|K|,\d{3}))?', text)
+    if not sal:
+        sal = re.search(r'[$\u20ac\u00a3]([5-9]\d{3}|\d{5,})(?:\s*[-\u2013]\s*[$\u20ac\u00a3]?[\d,]+)?', text)
+    if sal:
+        bits.append(sal.group(0))
 
-    # Tech keywords for bonus
-    tech_keywords = (
-        r'\b(python|javascript|react|node(\.js)?|aws|docker|sql|api|'
-        r'kubernetes|git|linux|agile|typescript|java|c\+\+|ruby|'
-        r'go|rust|swift|kotlin|flutter|html|css|mongodb|postgres|'
-        r'redis|graphql|tensorflow|pytorch|docker|terraform|ansible|'
-        r'ci/cd|rest|grpc|microservices|machine.?learning|ai)\b'
-    )
+    # Experience years
+    exp = re.search(r'(\d+)\s*\+?\s*years?\s*(of\s*)?experience', lower)
+    if exp:
+        bits.append(exp.group(0).strip())
 
-    # Split into paragraphs (handle both newline-separated and flat text)
-    paragraphs = [p.strip() for p in re.split(r'\n{2,}', text) if len(p.strip()) > 15]
-    if len(paragraphs) <= 1:
-        # Flat text — split on sentences and group, or split on noise markers
-        # First try splitting on known noise markers (common in RSS feeds)
-        markers = [
-            r'(?i)headquarters:', r'(?i)url:', r'(?i)compensation amount:',
-            r'(?i)about (the company|our)', r'(?i)job summary',
-            r'(?i)updated:', r'(?i)location:', r'(?i)type:',
-        ]
-        split_points = []
-        for m in markers:
-            for match in re.finditer(m, text):
-                split_points.append(match.start())
-        if split_points:
-            # Sort points, split text at those positions
-            split_points = sorted(set(split_points))
-            parts = []
-            for i, sp in enumerate(split_points):
-                end = split_points[i+1] if i+1 < len(split_points) else len(text)
-                part = text[sp:end].strip()
-                if len(part) > 20:
-                    parts.append(part)
-            if parts:
-                paragraphs = parts
-        if len(paragraphs) <= 1:
-            # Final fallback: split on sentences
-            sentences = [s.strip() + "." for s in text.split(". ") if len(s.strip()) > 30]
-            if sentences:
-                paragraphs = sentences
+    # Remote / location
+    if 'remote' in lower:
+        bits.append("Remote")
 
-    def is_noise(p):
-        """Check if paragraph is purely noise (no work content)."""
-        pl = p.lower().strip()
-        # Lines that are just metadata
-        if pl.startswith(noise_prefixes):
-            return True
-        # Mostly URLs or location info
-        if re.search(r'^https?://', pl) or re.match(r'^(headquarters|location|compensation|url)\s*:', pl, re.I):
-            return True
-        return False
-
-    def score_para(p):
-        pl = p.lower()
-        score = 0
-
-        # Penalize blabla heavily
-        for bp in blabla_patterns:
-            if bp in pl:
-                score -= 10
-                break
-
-        # Penalize noise lines
-        if is_noise(p):
-            return -100  # Effectively eliminate
-
-        # Boost for work signal words
-        for sw in work_signal_words:
-            if sw in pl:
-                score += 3
-
-        # Boost for matching job title keywords
-        title_lower = job_title.lower() if job_title else ""
-        title_words = set(re.findall(r'[a-zA-Z]+', title_lower))
-        stopwords = {"a", "an", "the", "and", "or", "of", "in", "to", "for",
-                     "with", "on", "at", "by", "is", "are", "it", "as",
-                     "we", "our", "us", "you", "your", "job", "role",
-                     "position", "new", "all", "about"}
-        title_words -= stopwords
-        para_words = set(re.findall(r'[a-zA-Z]+', pl))
-        score += len(para_words & title_words) * 3
-
-        # Bonus for salary mentioned
-        if re.search(r'[\$€£]', p):
-            score += 5
-
-        # Bonus for tech keywords
-        if re.search(tech_keywords, pl):
-            score += 3
-
-        # Boost for concise, focused paragraphs (50-250 chars)
-        if 50 < len(p) < 250:
-            score += 2
-        elif len(p) > 400:
-            score -= 1
-
-        return score
-
-    # Filter and score
-    scored = [(score_para(p), p) for p in paragraphs if score_para(p) > -50]
-    scored.sort(key=lambda x: x[0], reverse=True)
-
-    if not scored:
-        # Fallback: preview = first 200 chars, expanded = rest (no repeat)
-        if len(text) > 200:
-            preview = text[:200] + "…"
-            expanded = text[200:]
-        else:
-            preview = text
-            expanded = ""
-        if len(expanded) > 397:
-            expanded = expanded[:397] + "…"
-        if not expanded:
-            expanded = preview
-        return preview, expanded
-
-    # Preview: best scoring paragraph, max 200 chars
-    best_para = scored[0][1]
-    preview_source = best_para.strip()
-    preview = preview_source[:200] + "…" if len(preview_source) > 200 else preview_source
-
-    # Expanded: next best paragraphs up to 400 chars, SKIP the preview source
-    expanded_parts = []
-    length = 0
-    for _, p in scored:
-        if len(expanded_parts) >= 3:
-            break
-        # Skip the paragraph used for preview
-        if p.strip() == preview_source:
-            continue
-        # Deduplicate
-        if any(expanded_parts and (p[:60] in ep or ep[:60] in p) for ep in expanded_parts):
-            continue
-        if length + len(p) > 400:
-            remaining = 400 - length - 3
-            if remaining > 40:
-                expanded_parts.append(p[:remaining] + "…")
-            break
-        expanded_parts.append(p)
-        length += len(p)
-
-    if expanded_parts:
-        expanded = "\n\n".join(expanded_parts)
-        if len(expanded) > 400:
-            expanded = expanded[:397] + "…"
+    # Build preview
+    if bits:
+        preview = " • ".join(bits)
+        if len(preview) > 150:
+            preview = preview[:147] + "…"
+        # If only 'Remote' found, add a short meaningful sentence too
+        if preview.strip().lower() == 'remote':
+            sentences = re.split(r'[.\n]', text)
+            good = [s.strip() for s in sentences if len(s.strip()) > 40 and not re.search(r'(?i)(headquarters|url:|thank you|equal opportunity|diverse)', s)]
+            if good:
+                preview = good[0][:80] + "…" if len(good[0]) > 80 else good[0]
     else:
-        # No other paragraphs — show remaining of preview source
-        rest = preview_source[200:] if len(preview_source) > 200 else ""
-        expanded = rest[:397] + "…" if len(rest) > 400 else rest
+        # Grab a short meaningful sentence
+        sentences = re.split(r'[.\n]', text)
+        good = [s.strip() for s in sentences if len(s.strip()) > 40 and not re.search(r'(?i)(headquarters|url:|thank you|equal opportunity|diverse)', s)]
+        preview = (good[0][:150] + "…") if good else (text[:150] + "…")
+        if len(preview) <= 155:
+            preview = preview.replace("…", "").strip()
 
-    # Final safety: strip any preview overlap from expanded
-    preview_plain = preview.replace("…", "").strip()
-    while expanded.startswith(preview_plain) and len(expanded) > len(preview_plain):
-        expanded = expanded[len(preview_plain):].strip()
+    # Expanded: full clean text, no repeat of preview
+    expanded = re.sub(r'(?i)\b(headquarters|url|compensation amount|updated|location|type)\s*:.*?(?=\b[a-z]|$)', '', text)
+    expanded = re.sub(r'(?i)(thank you for|thanks for|we are an equal|all qualified applicants|diverse workforce|encourages applications).*?(\.|$)', '', expanded)
+    expanded = expanded.strip()
     if not expanded:
-        # No rest — just return preview as both
+        expanded = text
+    preview_stripped = preview.replace('…', '').strip()
+    if expanded.startswith(preview_stripped) and len(expanded) > len(preview_stripped):
+        expanded = expanded[len(preview_stripped):].strip()
+    if len(expanded) > 397:
+        expanded = expanded[:397] + "…"
+    if not expanded:
         expanded = preview
 
     return preview, expanded
