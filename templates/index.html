@@ -111,11 +111,11 @@
 
   /* ── Job Grid ── */
   .job-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    display: flex;
+    flex-direction: column;
     gap: 24px;
     padding: 20px 24px;
-    max-width: 1400px;
+    max-width: 900px;
     margin: 0 auto;
   }
 
@@ -168,6 +168,28 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
+  }
+  .job-card .category-badge {
+    background: var(--red-dark);
+    color: #fff;
+    padding: 2px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .job-card .skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 4px 0 8px;
+  }
+  .job-card .skill-tag {
+    background: #1a1a2e;
+    color: var(--text2);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    border: 1px solid #2a2a3e;
   }
 
   .job-card .location { color: var(--text3); }
@@ -300,7 +322,7 @@
     .logo { font-size: 22px; }
     .controls { padding: 12px 16px; flex-direction: column; }
     .controls input, .controls select { width: 100%; min-width: unset; }
-    .job-grid { grid-template-columns: 1fr; padding: 12px 16px; gap: 12px; }
+    .job-grid { padding: 12px 16px; gap: 16px; }
     .job-card { padding: 16px; }
     .job-card .title { font-size: 15px; }
     .btn { width: 100%; text-align: center; }
@@ -412,7 +434,9 @@ function render() {
         <span class="type-badge">${escapeHtml(job.type || 'Full-time')}</span>
         <span class="salary ${job.salary === 'Not specified' ? 'not-specified' : ''}">💰 ${escapeHtml(job.salary || 'Not specified')}</span>
         <span class="date">📅 ${escapeHtml(job.date || 'Unknown')}</span>
+        <span class="category-badge">${escapeHtml(job.category || 'Other')}</span>
       </div>
+      ${job.skills && job.skills.length ? '<div class="skills">' + job.skills.map(s => '<span class="skill-tag">' + escapeHtml(s) + '</span>').join('') + '</div>' : ''}
       <div class="description collapsed" data-full="${escapeHtml(job.full_description || job.description || '')}">
         <span class="desc-text">${escapeHtml(job.description || '')}</span>
       </div>

@@ -62,12 +62,13 @@ def fetch(url, timeout=15):
     return None
 
 
-def Job(title, company, location, jtype, salary, date, desc, full_desc, url, source):
+def Job(title, company, location, jtype, salary, date, desc, full_desc, url, source, category, skills):
     return {
         "title": title, "company": company, "location": location,
         "type": jtype, "salary": salary, "date": date,
         "description": desc, "full_description": full_desc,
         "url": url, "source": source,
+        "category": category, "skills": skills,
     }
 
 
@@ -111,6 +112,85 @@ def parse_salary(text):
     if m:
         return f"${m.group(1)}k"
     return "Not specified"
+
+
+# Category keywords lookup
+CATEGORIES = {
+    "Engineering": ["developer", "engineer", "software", "backend", "frontend", "fullstack",
+                     "devops", "data scientist", "data analyst", "qa", "infrastructure", "sre",
+                     "architect", "programmer", "coder", "tech lead", "engineering", "systems"],
+    "Marketing": ["marketing", "growth", "seo", "sem", "content", "social media", "brand",
+                   "pr", "communications", "digital marketing", "market", "campaign"],
+    "Design": ["designer", "design", "ux", "ui", "product design", "graphic", "visual",
+                "creative", "art", "figma", "sketch"],
+    "Sales": ["sales", "account executive", "bdr", "sdr", "business development",
+               "revenue", "partnership", "customer success", "account manager"],
+    "Finance": ["finance", "accounting", "audit", "tax", "financial", "controller",
+                 "cfo", "budget", "analyst - finance"],
+    "HR / Recruiting": ["hr", "recruiter", "talent", "people", "human resources",
+                         "hiring", "onboarding", "workforce"],
+    "Product": ["product manager", "product owner", "pm", "product", "program manager"],
+    "Operations": ["operations", "operations manager", "coordinator", "administrative",
+                    "office manager", "logistics", "supply chain"],
+    "Data": ["data scientist", "data engineer", "data analyst", "machine learning",
+              "ml engineer", "analytics", "bi", "statistics"],
+    "Medical / Health": ["doctor", "nurse", "medical", "healthcare", "clinical",
+                          "pharma", "patient", "therapist", "surgeon"],
+    "Legal": ["lawyer", "attorney", "legal", "compliance", "counsel", "paralegal"],
+    "Education": ["teacher", "professor", "instructor", "education", "tutor",
+                   "curriculum", "training"],
+}
+
+# Skills to detect in descriptions
+SKILL_KEYWORDS = {
+    # Languages
+    "Python": r'\bpython\b', "JavaScript": r'\bjavascript\b', "TypeScript": r'\btypescript\b',
+    "Java": r'\bjava\b', "C++": r'\bc\+\+\b', "Go": r'\bgo\b',
+    "Ruby": r'\bruby\b', "PHP": r'\bphp\b', "Swift": r'\bswift\b', "Kotlin": r'\bkotlin\b',
+    "Rust": r'\brust\b', "Go": r'\bgolang\b', "SQL": r'\bsql\b',
+    # Frontend
+    "React": r'\breact\b', "Angular": r'\bangular\b', "Vue.js": r'\bvue\b',
+    "HTML/CSS": r'\bhtml\b', "CSS": r'\bcss\b',
+    # Backend / Frameworks
+    "Node.js": r'\bnode(\.js)?\b', "Django": r'\bdjango\b', "Flask": r'\bflask\b',
+    "Rails": r'\brails\b', "Spring": r'\bspring\b', "FastAPI": r'\bfastapi\b',
+    # Cloud / Infra
+    "AWS": r'\baws\b', "GCP": r'\bgcp\b', "Azure": r'\bazure\b',
+    "Docker": r'\bdocker\b', "Kubernetes": r'\bkubernetes\b', "Terraform": r'\bterraform\b',
+    "CI/CD": r'\bci/cd\b',
+    # Data
+    "PyTorch": r'\bpytorch\b', "TensorFlow": r'\btensorflow\b',
+    "Pandas": r'\bpandas\b', "Spark": r'\bspark\b', "Tableau": r'\btableau\b',
+    # Tools
+    "Git": r'\bgit\b', "Linux": r'\blinux\b', "Agile": r'\bagile\b',
+    "REST API": r'\brest\b', "GraphQL": r'\bgraphql\b',
+}
+
+
+def extract_job_meta(full_text, job_title, job_type):
+    """Extract category and skills from job data."""
+    combined = ((job_title or "") + " " + (full_text or "")).lower()
+
+    # Detect category
+    detected_cat = "Other"
+    best_score = 0
+    for cat, keywords in CATEGORIES.items():
+        score = sum(2 if kw in combined else 0 for kw in keywords)
+        if score > best_score:
+            best_score = score
+            detected_cat = cat
+    # If detection is weak, use job type as fallback hint
+    if best_score == 0 and job_type:
+        detected_cat = "Other"
+
+    # Detect skills (max 6 to keep cards clean)
+    found_skills = []
+    for skill, pattern in SKILL_KEYWORDS.items():
+        if re.search(pattern, combined, re.I):
+            found_skills.append(skill)
+    found_skills = found_skills[:6]
+
+    return detected_cat, found_skills
 
 
 def extract_best_content(full_text, job_title):
@@ -336,8 +416,9 @@ def scrape_weworkremotely():
                     jtype = "Part-time"
                 elif "freelance" in t:
                     jtype = "Freelance"
+            category, skills = extract_job_meta(desc_text, title, jtype)
             jobs.append(Job(title, company, loc, jtype, salary,
-                           date_posted, preview, expanded, link, "We Work Remotely"))
+                           date_posted, preview, expanded, link, "We Work Remotely", category, skills))
             time.sleep(0.2)
     except Exception as e:
         log.warning("WWR error: %s", e)
@@ -402,8 +483,9 @@ def scrape_remoteok(search_term="developer"):
                         jtype = "Contract"
                     elif "part time" in tl or "part-time" in tl:
                         jtype = "Part-time"
+            category, skills = extract_job_meta(desc, title, jtype)
             jobs.append(Job(title, company, loc, jtype,
-                           salary, date_posted, preview, expanded, link, "RemoteOK"))
+                           salary, date_posted, preview, expanded, link, "RemoteOK", category, skills))
             count += 1
             time.sleep(0.2)
     except Exception as e:
@@ -467,8 +549,9 @@ def scrape_muse(search_term="developer"):
                 clean = ""
             preview, expanded = extract_best_content(clean, title)
 
+            category, skills = extract_job_meta(clean, title, jtype)
             jobs.append(Job(title, company, location, jtype,
-                           salary, date_posted, preview, expanded, link, "The Muse"))
+                           salary, date_posted, preview, expanded, link, "The Muse", category, skills))
             time.sleep(0.2)
     except Exception as e:
         log.warning("Muse error: %s", e)
