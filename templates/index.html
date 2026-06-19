@@ -136,16 +136,7 @@
     box-shadow: 0 6px 20px rgba(220, 20, 60, 0.15);
   }
 
-  .job-card .source-badge {
-    position: absolute;
-    top: 16px; right: 16px;
-    font-size: 10px;
-    color: var(--text3);
-    background: var(--bg3);
-    padding: 2px 8px;
-    border-radius: 4px;
-    border: 1px solid #2a2a2a;
-  }
+
 
   .job-card .title {
     font-size: 17px;
@@ -413,7 +404,7 @@ function render() {
 
   grid.innerHTML = filtered.map(job => `
     <div class="job-card">
-      <span class="source-badge">${escapeHtml(job.source || '')}</span>
+
       <div class="title"><a href="${escapeHtml(job.url || '#')}" target="_blank" rel="noopener">${escapeHtml(job.title || 'Untitled')}</a></div>
       <div class="company">${escapeHtml(job.company || 'Unknown')}</div>
       <div class="meta">
