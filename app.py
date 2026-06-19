@@ -115,80 +115,171 @@ def parse_salary(text):
 
 def extract_best_content(full_text, job_title):
     """Extract smart preview + concise expandable text from a job description.
+    Strips noise, picks the most work-relevant paragraphs.
     Returns (preview, expanded)."""
     if not full_text or len(full_text.strip()) < 20:
         return full_text or "", ""
 
     text = full_text.strip()
 
-    # Build keyword set from job title
-    title_lower = job_title.lower() if job_title else ""
-    title_keywords = set(re.findall(r'[a-zA-Z]+', title_lower))
-    stopwords = {"a", "an", "the", "and", "or", "of", "in", "to", "for",
-                 "with", "on", "at", "by", "is", "are", "it", "as",
-                 "we", "our", "us", "you", "your", "job", "role",
-                 "position", "new", "all", "about"}
-    title_keywords -= stopwords
+    # Common RSS/intro noise lines to filter out entirely
+    noise_prefixes = (
+        "headquarters:", "url:", "compensation amount:",
+        "please mention the word", "when applying, tell them you found",
+        "updated:", "location:", "type:",
+    )
 
-    # Add high-value signal words
-    signal_words = {"salary", "requirements", "qualifications", "experience",
-                    "skills", "responsibilities",
-                    "what you'll do", "about you", "we're looking for",
-                    "you have", "you'll", "must have",
-                    "nice to have", "preferred", "senior", "lead", "remote",
-                    "budget", "equity", "benefits", "tech stack", "tools"}
+    # Corporate blabla — big penalty
+    blabla_patterns = (
+        "about the company", "our story", "company description",
+        "at our company", "is an equal", "we are an equal",
+        "thank you for", "thanks for", "our mission",
+        "we're building a world", "we are a high growth",
+        "we are dedicated to", "we are committed to",
+        "we are looking to hire", "all qualified applicants",
+        "diverse workforce", "we celebrate", "we strive",
+        "join our team of", "we're proud to", "we're excited to",
+        "does not discriminate", "encourages applications from",
+    )
 
-    # Split into paragraphs
-    paragraphs = [p.strip() for p in re.split(r'\n{2,}', text) if p.strip()]
-    if not paragraphs:
-        # Fallback: split by sentences
-        paragraphs = [p.strip() for p in text.split(". ") if len(p.strip()) > 30]
-        if paragraphs:
-            paragraphs = [p + "." for p in paragraphs]
+    # Keywords that signal real job content
+    work_signal_words = (
+        "salary", "requirements", "qualifications", "experience",
+        "skills", "responsibilities", "what you\'ll do", "about you",
+        "we\'re looking for", "you have", "you\'ll work", "you will",
+        "must have", "nice to have", "preferred",
+        "what we\'re looking for", "who you are",
+        "key responsibilities", "role requirements",
+        "your profile", "what you bring",
+        "budget", "equity", "benefits", "compensation",
+        "tech stack", "tools", "framework", "platform",
+        "senior", "lead", "head of", "manager",
+        "years of experience", "bachelor", "degree",
+        "proficiency in", "expertise in", "knowledge of",
+        "familiar with", "experience with", "fluent in",
+    )
+
+    # Tech keywords for bonus
+    tech_keywords = (
+        r'\b(python|javascript|react|node(\.js)?|aws|docker|sql|api|'
+        r'kubernetes|git|linux|agile|typescript|java|c\+\+|ruby|'
+        r'go|rust|swift|kotlin|flutter|html|css|mongodb|postgres|'
+        r'redis|graphql|tensorflow|pytorch|docker|terraform|ansible|'
+        r'ci/cd|rest|grpc|microservices|machine.?learning|ai)\b'
+    )
+
+    # Split into paragraphs (handle both newline-separated and flat text)
+    paragraphs = [p.strip() for p in re.split(r'\n{2,}', text) if len(p.strip()) > 15]
+    if len(paragraphs) <= 1:
+        # Flat text — split on sentences and group, or split on noise markers
+        # First try splitting on known noise markers (common in RSS feeds)
+        markers = [
+            r'(?i)headquarters:', r'(?i)url:', r'(?i)compensation amount:',
+            r'(?i)about (the company|our)', r'(?i)job summary',
+            r'(?i)updated:', r'(?i)location:', r'(?i)type:',
+        ]
+        split_points = []
+        for m in markers:
+            for match in re.finditer(m, text):
+                split_points.append(match.start())
+        if split_points:
+            # Sort points, split text at those positions
+            split_points = sorted(set(split_points))
+            parts = []
+            for i, sp in enumerate(split_points):
+                end = split_points[i+1] if i+1 < len(split_points) else len(text)
+                part = text[sp:end].strip()
+                if len(part) > 20:
+                    parts.append(part)
+            if parts:
+                paragraphs = parts
+        if len(paragraphs) <= 1:
+            # Final fallback: split on sentences
+            sentences = [s.strip() + "." for s in text.split(". ") if len(s.strip()) > 30]
+            if sentences:
+                paragraphs = sentences
+
+    def is_noise(p):
+        """Check if paragraph is purely noise (no work content)."""
+        pl = p.lower().strip()
+        # Lines that are just metadata
+        if pl.startswith(noise_prefixes):
+            return True
+        # Mostly URLs or location info
+        if re.search(r'^https?://', pl) or re.match(r'^(headquarters|location|compensation|url)\s*:', pl, re.I):
+            return True
+        return False
 
     def score_para(p):
         pl = p.lower()
         score = 0
-        # Matches with title keywords
-        words = set(re.findall(r'[a-zA-Z]+', pl))
-        score += len(words & title_keywords) * 3
-        # Matches with signal words
-        for sw in signal_words:
+
+        # Penalize blabla heavily
+        for bp in blabla_patterns:
+            if bp in pl:
+                score -= 10
+                break
+
+        # Penalize noise lines
+        if is_noise(p):
+            return -100  # Effectively eliminate
+
+        # Boost for work signal words
+        for sw in work_signal_words:
             if sw in pl:
-                score += 2
-        # Shorter paragraphs get a slight boost (more focused)
-        if 50 < len(p) < 300:
-            score += 1
-        # Bonus for containing salary number or common tech terms
+                score += 3
+
+        # Boost for matching job title keywords
+        title_lower = job_title.lower() if job_title else ""
+        title_words = set(re.findall(r'[a-zA-Z]+', title_lower))
+        stopwords = {"a", "an", "the", "and", "or", "of", "in", "to", "for",
+                     "with", "on", "at", "by", "is", "are", "it", "as",
+                     "we", "our", "us", "you", "your", "job", "role",
+                     "position", "new", "all", "about"}
+        title_words -= stopwords
+        para_words = set(re.findall(r'[a-zA-Z]+', pl))
+        score += len(para_words & title_words) * 3
+
+        # Bonus for salary mentioned
         if re.search(r'[\$€£]', p):
+            score += 5
+
+        # Bonus for tech keywords
+        if re.search(tech_keywords, pl):
             score += 3
-        if re.search(r'\b(python|javascript|react|node|aws|docker|sql|api|\n                      kubernetes|git|linux|agile|typescript|java|c\+\+|ruby|\n                      go|rust|swift|kotlin|flutter|html|css|mongodb|postgres)\b', pl):
+
+        # Boost for concise, focused paragraphs (50-250 chars)
+        if 50 < len(p) < 250:
             score += 2
-        # Penalize very long generic intro/outro
-        if len(p) > 500:
+        elif len(p) > 400:
             score -= 1
-        if pl.startswith("thank you") or pl.startswith("thanks") or pl.startswith("we are an equal"):
-            score -= 5
+
         return score
 
-    scored = [(score_para(p), p) for p in paragraphs]
+    # Filter and score
+    scored = [(score_para(p), p) for p in paragraphs if score_para(p) > -50]
     scored.sort(key=lambda x: x[0], reverse=True)
 
-    # Preview: best paragraph, max 200 chars
-    best_para = scored[0][1] if scored else text
+    if not scored:
+        # Fallback: just return truncated raw text
+        preview = text[:200] + "…" if len(text) > 200 else text
+        expanded = text[:397] + "…" if len(text) > 400 else text
+        return preview, expanded
+
+    # Preview: best scoring paragraph, max 200 chars
+    best_para = scored[0][1]
     preview = best_para[:200] + "…" if len(best_para) > 200 else best_para
 
-    # Expanded: top 2-3 paragraphs, max 400 chars, concise
+    # Expanded: top-scoring paragraphs up to 400 chars, no duplicates
     expanded_parts = []
     length = 0
     for _, p in scored:
         if len(expanded_parts) >= 3:
             break
-        # Skip if it's basically the same as what we already have
-        if any(expanded_parts and (p[:50] in ep or ep[:50] in p) for ep in expanded_parts):
+        # Deduplicate (skip if very similar to something already included)
+        if any(expanded_parts and (p[:60] in ep or ep[:60] in p) for ep in expanded_parts):
             continue
         if length + len(p) > 400:
-            # Take a portion
             remaining = 400 - length - 3
             if remaining > 40:
                 expanded_parts.append(p[:remaining] + "…")
@@ -234,6 +325,7 @@ def scrape_weworkremotely():
                 loc = "Remote (US)"
             salary = parse_salary(desc_text)
             preview, expanded = extract_best_content(desc_text, title)
+            description = desc_text[:150] + "…" if len(desc_text) > 150 else desc_text
             date_posted = parse_date(entry.get("published", ""))
             jtype = "Full-time"
             for tag in entry.get("tags", []):
@@ -288,6 +380,8 @@ def scrape_remoteok(search_term="developer"):
             desc_raw = item.get("description", "")
             desc = BeautifulSoup(desc_raw, "html.parser").get_text(separator=" ", strip=True) if desc_raw else ""
             preview, expanded = extract_best_content(desc, title)
+            desc = item.get("description", "")
+            description = desc[:150] + "…" if len(desc) > 150 else desc
             # Extract date
             raw_date = item.get("date", "")
             date_posted = "Unknown"

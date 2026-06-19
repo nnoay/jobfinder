@@ -227,6 +227,10 @@
   }
   .job-card .description .collapse-hint:hover {
     color: var(--red);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   .job-card .card-footer {
@@ -421,6 +425,7 @@ function render() {
       <div class="description collapsed" data-full="${escapeHtml(job.full_description || job.description || '')}">
         <span class="desc-text">${escapeHtml(job.description || '')}</span>
       </div>
+      <div class="description">${escapeHtml(job.description || '')}</div>
       <div class="card-footer">
         <a href="${escapeHtml(job.url || '#')}" class="apply-btn" target="_blank" rel="noopener">Apply</a>
         <span class="powered">via ${escapeHtml(job.source || 'Unknown')}</span>
