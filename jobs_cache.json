@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-06-19 15:00:03 UTC",
+  "last_updated": "2026-06-19 15:04:42 UTC",
   "jobs": [
     {
       "title": "HugeInc: Managing Director, Marketing Services",
@@ -13,7 +13,10 @@
       "url": "https://weworkremotely.com/remote-jobs/hugeinc-managing-director-marketing-services",
       "source": "We Work Remotely",
       "category": "Marketing",
-      "skills": []
+      "skills": [
+        "CRM",
+        "SEO"
+      ]
     },
     {
       "title": "Guest Services: Manager, Growth Marketing",
@@ -27,7 +30,9 @@
       "url": "https://weworkremotely.com/remote-jobs/guest-services-manager-growth-marketing",
       "source": "We Work Remotely",
       "category": "Marketing",
-      "skills": []
+      "skills": [
+        "SEO"
+      ]
     },
     {
       "title": "Sterry: Head of Amazon",
@@ -111,7 +116,9 @@
       "url": "https://weworkremotely.com/remote-jobs/bottle-nexus-affiliate-brand-account-manager",
       "source": "We Work Remotely",
       "category": "Marketing",
-      "skills": []
+      "skills": [
+        "Project Mgmt"
+      ]
     },
     {
       "title": "VP Strategic Customer Programs",
@@ -125,7 +132,9 @@
       "url": "https://remoteOK.com/remote-jobs/remote-vp-strategic-customer-programs-karbon-1133685",
       "source": "RemoteOK",
       "category": "Engineering",
-      "skills": []
+      "skills": [
+        "Project Mgmt"
+      ]
     },
     {
       "title": "VP GM East &amp; Control",
@@ -155,7 +164,7 @@
       "category": "Design",
       "skills": [
         "Spring",
-        "Agile"
+        "Agile / Scrum"
       ]
     },
     {
@@ -173,17 +182,17 @@
       "skills": []
     },
     {
-      "title": "Staff Product Manager Product Information Management",
-      "company": "HighLevel",
-      "location": "Remote",
+      "title": "Call Center Agent Quality",
+      "company": "Aljazira Bank | \u00d8\u00a8\u00d9\u0086\u00d9\u0083 \u00d8\u00a7\u00d9\u0084\u00d8\u00ac\u00d8\u00b2\u00d9\u008a\u00d8\u00b1\u00d8\u00a9",
+      "location": "\u00d8\u00a7\u00d9\u0084\u00d8\u00b1\u00d9\u008a\u00d8\u00a7\u00d8\u00b6, \u00d8\u00a7\u00d9\u0084\u00d8\u00b1\u00d9\u008a\u00d8\u00a7\u00d8\u00b6 \u00d8\u00a7\u00d9\u0084\u00d8\u00b3\u00d8\u00b9\u00d9\u0088\u00d8\u00af\u00d9\u008a\u00d8\u00a9",
       "type": "Full-time",
-      "salary": "$7",
+      "salary": "Not specified",
       "date": "2026-06-18",
-      "description": "What You'll Do \u00e2\u0097\u008f Own the PIM Vision: Define and drive the end-to-end roadmap for HighLevel\u00e2\u0080\u0099s Product Information Management system \u00e2\u0080\u0094 from Items, Variants, and Catalog Items to Price Lists, Units\u2026",
-      "full_description": "What You'll Do \u00e2\u0097\u008f Own the PIM Vision: Define and drive the end-to-end roadmap for HighLevel\u00e2\u0080\u0099s Product Information Management system \u00e2\u0080\u0094 from Items, Variants, and Catalog Items to Price Lists, Units of Measure, and multi-channel price resolution logic \u00e2\u0097\u008f Lead the Catalog Overhaul: Architect the migration from our existing catalog foundation to a robust, extensible PIM that supports the full \u2026",
-      "url": "https://remoteOK.com/remote-jobs/remote-staff-product-manager-product-information-management-highlevel-1133598",
+      "description": "Core Responsibilities: Assist in implementing Contact Center quality assurance framework, including call monitoring methodologies, scoring criteria, and improvement action plans.",
+      "full_description": "Core Responsibilities: Assist in implementing Contact Center quality assurance framework, including call monitoring methodologies, scoring criteria, and improvement action plans.\n\nNo experience is needed with Bachelor's degree or around 1 year of experience with Diploma's degree.\n\nPrior experience in call center operations, customer service, or banking customer support or a relevant field is pr\u2026",
+      "url": "https://remoteOK.com/remote-jobs/remote-call-center-agent-quality-aljazira-bank-1133706",
       "source": "RemoteOK",
-      "category": "Engineering",
+      "category": "Design",
       "skills": []
     },
     {

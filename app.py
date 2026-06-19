@@ -145,25 +145,31 @@ CATEGORIES = {
 SKILL_KEYWORDS = {
     # Languages
     "Python": r'\bpython\b', "JavaScript": r'\bjavascript\b', "TypeScript": r'\btypescript\b',
-    "Java": r'\bjava\b', "C++": r'\bc\+\+\b', "Go": r'\bgo\b',
+    "Java": r'\bjava\b', "C++": r'\bc\+\+\b', "C#": r'\bc#\b',
     "Ruby": r'\bruby\b', "PHP": r'\bphp\b', "Swift": r'\bswift\b', "Kotlin": r'\bkotlin\b',
     "Rust": r'\brust\b', "Go": r'\bgolang\b', "SQL": r'\bsql\b',
     # Frontend
     "React": r'\breact\b', "Angular": r'\bangular\b', "Vue.js": r'\bvue\b',
-    "HTML/CSS": r'\bhtml\b', "CSS": r'\bcss\b',
+    "HTML/CSS": r'\bhtml\b',
     # Backend / Frameworks
-    "Node.js": r'\bnode(\.js)?\b', "Django": r'\bdjango\b', "Flask": r'\bflask\b',
+    "Node.js": r'\bnode\.js\b', "Django": r'\bdjango\b', "Flask": r'\bflask\b',
     "Rails": r'\brails\b', "Spring": r'\bspring\b', "FastAPI": r'\bfastapi\b',
+    ".NET": r'\b\.net\b',
     # Cloud / Infra
     "AWS": r'\baws\b', "GCP": r'\bgcp\b', "Azure": r'\bazure\b',
     "Docker": r'\bdocker\b', "Kubernetes": r'\bkubernetes\b', "Terraform": r'\bterraform\b',
     "CI/CD": r'\bci/cd\b',
-    # Data
-    "PyTorch": r'\bpytorch\b', "TensorFlow": r'\btensorflow\b',
-    "Pandas": r'\bpandas\b', "Spark": r'\bspark\b', "Tableau": r'\btableau\b',
-    # Tools
-    "Git": r'\bgit\b', "Linux": r'\blinux\b', "Agile": r'\bagile\b',
-    "REST API": r'\brest\b', "GraphQL": r'\bgraphql\b',
+    # Data / AI / ML
+    "Machine Learning": r'\bmachine learning|ml\b',
+    "Data Analysis": r'\bdata (analysis|science|analytics)\b',
+    "Power BI": r'\bpower bi\b', "Tableau": r'\btableau\b',
+    # Tools & Methods
+    "Git": r'\bgit\b', "Linux": r'\blinux\b',
+    "Agile / Scrum": r'\bagile|scrum\b', "REST API": r'\brest\b', "GraphQL": r'\bgraphql\b',
+    "A/B Testing": r'\ba/b testing\b',
+    # Business
+    "Project Mgmt": r'\bproject management\b',
+    "CRM": r'\bcrm\b', "SEO": r'\bseo\b',
 }
 
 
@@ -179,11 +185,8 @@ def extract_job_meta(full_text, job_title, job_type):
         if score > best_score:
             best_score = score
             detected_cat = cat
-    # If detection is weak, use job type as fallback hint
-    if best_score == 0 and job_type:
-        detected_cat = "Other"
 
-    # Detect skills (max 6 to keep cards clean)
+    # Detect skills from text (max 6)
     found_skills = []
     for skill, pattern in SKILL_KEYWORDS.items():
         if re.search(pattern, combined, re.I):

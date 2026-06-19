@@ -343,7 +343,10 @@
 
 <!-- Controls -->
 <div class="controls">
-  <input type="text" id="searchInput" placeholder="Search by title or company..." autocomplete="off">
+  <input type="text" id="searchInput" placeholder="Search title, company or skills..." autocomplete="off">
+  <select id="categoryFilter">
+    <option value="">All Categories</option>
+  </select>
   <select id="locationFilter">
     <option value="">All Locations</option>
   </select>
@@ -355,8 +358,6 @@
     <option value="Internship">Internship</option>
     <option value="Temporary">Temporary</option>
   </select>
-  <button class="btn btn-outline" id="refreshBtn" onclick="refreshData()">⟳ Refresh</button>
-  <button class="btn" id="scrapeBtn" onclick="triggerScrape()">⟳ Scrape Now</button>
 </div>
 
 <!-- Stats -->
@@ -397,15 +398,18 @@ function render() {
   const search = document.getElementById('searchInput').value.toLowerCase().trim();
   const location = document.getElementById('locationFilter').value;
   const type = document.getElementById('typeFilter').value;
+  const category = document.getElementById('categoryFilter').value;
 
   let filtered = allJobs.filter(job => {
     if (search) {
       const inTitle = (job.title || '').toLowerCase().includes(search);
       const inCompany = (job.company || '').toLowerCase().includes(search);
-      if (!inTitle && !inCompany) return false;
+      const inSkills = (job.skills || []).some(s => s.toLowerCase().includes(search));
+      if (!inTitle && !inCompany && !inSkills) return false;
     }
     if (location && (job.location || '').toLowerCase() !== location.toLowerCase()) return false;
     if (type && (job.type || '').toLowerCase() !== type.toLowerCase()) return false;
+    if (category && (job.category || 'Other') !== category) return false;
     return true;
   });
 
@@ -451,17 +455,25 @@ function render() {
 
 function populateFilters() {
   const locs = [...new Set(allJobs.map(j => j.location).filter(Boolean))];
-  const sel = document.getElementById('locationFilter');
-  const current = sel.value;
-  sel.innerHTML = '<option value="">All Locations</option>' +
+  const selLoc = document.getElementById('locationFilter');
+  const curLoc = selLoc.value;
+  selLoc.innerHTML = '<option value="">All Locations</option>' +
     locs.sort().map(l => `<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
-  if (current) sel.value = current;
+  if (curLoc) selLoc.value = curLoc;
+
+  const cats = [...new Set(allJobs.map(j => j.category).filter(Boolean))].sort();
+  const selCat = document.getElementById('categoryFilter');
+  const curCat = selCat.value;
+  selCat.innerHTML = '<option value="">All Categories</option>' +
+    cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  if (curCat) selCat.value = curCat;
 }
 
 function resetFilters() {
   document.getElementById('searchInput').value = '';
   document.getElementById('locationFilter').value = '';
   document.getElementById('typeFilter').value = '';
+  document.getElementById('categoryFilter').value = '';
   render();
 }
 
@@ -469,34 +481,7 @@ function resetFilters() {
 document.getElementById('searchInput').addEventListener('input', render);
 document.getElementById('locationFilter').addEventListener('change', render);
 document.getElementById('typeFilter').addEventListener('change', render);
-
-// ─── Refresh / Scrape ───
-async function refreshData() {
-  document.getElementById('jobGrid').innerHTML = `
-    <div class="loading">
-      <div class="spinner"></div>
-      <p>Refreshing...</p>
-    </div>`;
-  await fetchJobs();
-}
-
-async function triggerScrape() {
-  const btn = document.getElementById('scrapeBtn');
-  btn.disabled = true;
-  btn.textContent = '⏳ Scraping...';
-  try {
-    await fetch('/scrape', { method: 'POST' });
-    // Wait a few seconds then refresh
-    setTimeout(async () => {
-      await refreshData();
-      btn.disabled = false;
-      btn.textContent = '⟳ Scrape Now';
-    }, 5000);
-  } catch (e) {
-    btn.disabled = false;
-    btn.textContent = '⟳ Scrape Now';
-  }
-}
+document.getElementById('categoryFilter').addEventListener('change', render);
 
 // ─── Auto-refresh every 60s ───
 setInterval(async () => {
@@ -506,6 +491,9 @@ setInterval(async () => {
     await fetchJobs();
   }
 }, 60000);
+
+// ─── Init ───
+fetchJobs();
 
 // ─── Expand / Collapse ───
 document.getElementById('jobGrid').addEventListener('click', function(e) {
@@ -547,8 +535,6 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-// ─── Init ───
-fetchJobs();
 </script>
 </body>
 </html>
