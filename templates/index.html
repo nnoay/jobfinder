@@ -7,17 +7,18 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --bg: #000000;
-    --bg2: #0d0d0d;
-    --bg3: #1a1a1a;
-    --card: #111111;
-    --card-border: #cc0000;
-    --red: #dc143c;
-    --red-bright: #ff1a1a;
-    --red-dark: #8b0000;
-    --text: #ffffff;
-    --text2: #cccccc;
-    --text3: #888888;
+    --bg: #f0f4f8;
+    --bg2: #ffffff;
+    --bg3: #e8edf2;
+    --card: #ffffff;
+    --card-border: #2563eb;
+    --blue: #2563eb;
+    --blue-bright: #3b82f6;
+    --blue-dark: #1d4ed8;
+    --blue-light: #dbeafe;
+    --text: #1e293b;
+    --text2: #475569;
+    --text3: #94a3b8;
     --header-h: 64px;
   }
   html { scroll-behavior: smooth; }
@@ -32,14 +33,14 @@
   header {
     position: sticky; top: 0; z-index: 100;
     background: var(--bg2);
-    border-bottom: 3px solid var(--red);
+    border-bottom: 3px solid var(--blue);
     padding: 16px 24px;
     display: flex; align-items: center; justify-content: space-between;
     flex-wrap: wrap; gap: 12px;
   }
   .logo {
     font-size: 28px; font-weight: 900;
-    color: var(--red);
+    color: var(--blue);
     letter-spacing: 1px; text-transform: uppercase;
   }
   .logo span { color: var(--text); }
@@ -66,14 +67,14 @@
     min-width: 180px;
   }
   .controls input:focus, .controls select:focus {
-    border-color: var(--red);
+    border-color: var(--blue);
   }
   .controls input::placeholder { color: var(--text3); }
   .controls select { cursor: pointer; }
   .controls select option { background: var(--bg3); color: var(--text); }
 
   .btn {
-    background: var(--red);
+    background: var(--blue);
     color: #000;
     border: none;
     padding: 10px 22px;
@@ -85,7 +86,7 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
-  .btn:hover { background: var(--red-bright); }
+  .btn:hover { background: var(--blue-bright); }
   .btn:active { transform: scale(0.97); }
   .btn:disabled {
     background: #333;
@@ -95,19 +96,19 @@
   }
   .btn-outline {
     background: transparent;
-    border: 1px solid var(--red);
-    color: var(--red);
+    border: 1px solid var(--blue);
+    color: var(--blue);
   }
-  .btn-outline:hover { background: var(--red); color: #000; }
+  .btn-outline:hover { background: var(--blue); color: #000; }
 
   /* ── Stats bar ── */
   .stats {
     padding: 8px 24px;
     font-size: 13px;
     color: var(--text3);
-    border-bottom: 1px solid #1a1a1a;
+    border-bottom: 1px solid #e2e8f0;
   }
-  .stats .count { color: var(--red); font-weight: 700; }
+  .stats .count { color: var(--blue); font-weight: 700; }
 
   /* ── Job Grid ── */
   .job-grid {
@@ -141,12 +142,12 @@
   .job-card .title {
     font-size: 17px;
     font-weight: 700;
-    color: var(--red);
+    color: var(--blue);
     line-height: 1.3;
     margin-bottom: 2px;
   }
   .job-card .title a {
-    color: var(--red);
+    color: var(--blue);
     text-decoration: none;
   }
   .job-card .title a:hover { text-decoration: underline; }
@@ -170,7 +171,7 @@
     gap: 4px;
   }
   .job-card .category-badge {
-    background: var(--red-dark);
+    background: var(--blue-dark);
     color: #fff;
     padding: 2px 10px;
     border-radius: 4px;
@@ -194,7 +195,7 @@
 
   .job-card .location { color: var(--text3); }
   .job-card .type-badge {
-    background: var(--red-dark);
+    background: var(--blue-dark);
     color: #fff;
     padding: 2px 8px;
     border-radius: 4px;
@@ -227,7 +228,7 @@
     -webkit-box-orient: vertical;
   }
   .job-card .description .expand-hint {
-    color: var(--red);
+    color: var(--blue);
     font-weight: 600;
     cursor: pointer;
   }
@@ -239,7 +240,7 @@
     cursor: pointer;
   }
   .job-card .description .collapse-hint:hover {
-    color: var(--red);
+    color: var(--blue);
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -256,7 +257,7 @@
   }
 
   .job-card .apply-btn {
-    background: var(--red);
+    background: var(--blue);
     color: #000;
     text-decoration: none;
     padding: 8px 18px;
@@ -265,7 +266,7 @@
     font-weight: 700;
     transition: background 0.2s;
   }
-  .job-card .apply-btn:hover { background: var(--red-bright); }
+  .job-card .apply-btn:hover { background: var(--blue-bright); }
 
   .job-card .powered {
     font-size: 10px;
@@ -297,7 +298,7 @@
   ::-webkit-scrollbar { width: 8px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--red); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--blue); }
 
   /* ── Loading ── */
   .loading {
@@ -309,7 +310,7 @@
     display: inline-block;
     width: 32px; height: 32px;
     border: 3px solid #333;
-    border-top-color: var(--red);
+    border-top-color: var(--blue);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
     margin-bottom: 10px;
