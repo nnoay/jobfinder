@@ -7,18 +7,17 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --bg: #f8faff;
-    --bg2: #ffffff;
-    --bg3: #eef3fc;
-    --card: #ffffff;
-    --card-border: #93c5fd;
-    --blue: #3b82f6;
-    --blue-bright: #60a5fa;
-    --blue-dark: #2563eb;
-    --blue-light: #dbeafe;
-    --text: #1e293b;
-    --text2: #475569;
-    --text3: #94a3b8;
+    --bg: #000000;
+    --bg2: #0d0d0d;
+    --bg3: #1a1a1a;
+    --card: #111111;
+    --card-border: #cc0000;
+    --red: #dc143c;
+    --red-bright: #ff1a1a;
+    --red-dark: #8b0000;
+    --text: #ffffff;
+    --text2: #cccccc;
+    --text3: #888888;
     --header-h: 64px;
   }
   html { scroll-behavior: smooth; }
@@ -33,14 +32,14 @@
   header {
     position: sticky; top: 0; z-index: 100;
     background: var(--bg2);
-    border-bottom: 3px solid var(--blue);
+    border-bottom: 3px solid var(--red);
     padding: 16px 24px;
     display: flex; align-items: center; justify-content: space-between;
     flex-wrap: wrap; gap: 12px;
   }
   .logo {
     font-size: 28px; font-weight: 900;
-    color: var(--blue);
+    color: var(--red);
     letter-spacing: 1px; text-transform: uppercase;
   }
   .logo span { color: var(--text); }
@@ -67,14 +66,14 @@
     min-width: 180px;
   }
   .controls input:focus, .controls select:focus {
-    border-color: var(--blue);
+    border-color: var(--red);
   }
   .controls input::placeholder { color: var(--text3); }
   .controls select { cursor: pointer; }
   .controls select option { background: var(--bg3); color: var(--text); }
 
   .btn {
-    background: var(--blue);
+    background: var(--red);
     color: #000;
     border: none;
     padding: 10px 22px;
@@ -86,7 +85,7 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
-  .btn:hover { background: var(--blue-bright); }
+  .btn:hover { background: var(--red-bright); }
   .btn:active { transform: scale(0.97); }
   .btn:disabled {
     background: #333;
@@ -96,19 +95,19 @@
   }
   .btn-outline {
     background: transparent;
-    border: 1px solid var(--blue);
-    color: var(--blue);
+    border: 1px solid var(--red);
+    color: var(--red);
   }
-  .btn-outline:hover { background: var(--blue); color: #000; }
+  .btn-outline:hover { background: var(--red); color: #000; }
 
   /* ── Stats bar ── */
   .stats {
     padding: 8px 24px;
     font-size: 13px;
     color: var(--text3);
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid #1a1a1a;
   }
-  .stats .count { color: var(--blue); font-weight: 700; }
+  .stats .count { color: var(--red); font-weight: 700; }
 
   /* ── Job Grid ── */
   .job-grid {
@@ -142,12 +141,12 @@
   .job-card .title {
     font-size: 17px;
     font-weight: 700;
-    color: var(--blue);
+    color: var(--red);
     line-height: 1.3;
     margin-bottom: 2px;
   }
   .job-card .title a {
-    color: var(--blue);
+    color: var(--red);
     text-decoration: none;
   }
   .job-card .title a:hover { text-decoration: underline; }
@@ -171,8 +170,8 @@
     gap: 4px;
   }
   .job-card .category-badge {
-    background: var(--blue-light);
-    color: var(--blue-dark);
+    background: var(--red-dark);
+    color: var(--red-dark);
     padding: 2px 10px;
     border-radius: 4px;
     font-size: 11px;
@@ -185,8 +184,8 @@
     margin: 4px 0 8px;
   }
   .job-card .skill-tag {
-    background: var(--blue-light);
-    color: var(--blue-dark);
+    background: var(--red-dark);
+    color: var(--red-dark);
     padding: 2px 8px;
     border-radius: 4px;
     font-size: 11px;
@@ -195,7 +194,7 @@
 
   .job-card .location { color: var(--text3); }
   .job-card .type-badge {
-    background: var(--blue-dark);
+    background: var(--red-dark);
     color: #fff;
     padding: 2px 8px;
     border-radius: 4px;
@@ -217,34 +216,6 @@
     font-size: 13px;
     line-height: 1.5;
     margin: 4px 0 8px;
-    overflow: hidden;
-    transition: max-height 0.25s ease;
-    cursor: pointer;
-    position: relative;
-  }
-  .job-card .description.collapsed {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-  }
-  .job-card .description .expand-hint {
-    color: var(--blue);
-    font-weight: 600;
-    cursor: pointer;
-  }
-  .job-card .description .collapse-hint {
-    display: block;
-    color: var(--text3);
-    font-size: 11px;
-    margin-top: 4px;
-    cursor: pointer;
-  }
-  .job-card .description .collapse-hint:hover {
-    color: var(--blue);
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
   }
 
   .job-card .card-footer {
@@ -257,7 +228,7 @@
   }
 
   .job-card .apply-btn {
-    background: var(--blue);
+    background: var(--red);
     color: #000;
     text-decoration: none;
     padding: 8px 18px;
@@ -266,7 +237,7 @@
     font-weight: 700;
     transition: background 0.2s;
   }
-  .job-card .apply-btn:hover { background: var(--blue-bright); }
+  .job-card .apply-btn:hover { background: var(--red-bright); }
 
   .job-card .powered {
     font-size: 10px;
@@ -298,7 +269,7 @@
   ::-webkit-scrollbar { width: 8px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--blue); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--red); }
 
   /* ── Loading ── */
   .loading {
@@ -310,7 +281,7 @@
     display: inline-block;
     width: 32px; height: 32px;
     border: 3px solid #333;
-    border-top-color: var(--blue);
+    border-top-color: var(--red);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
     margin-bottom: 10px;
@@ -442,10 +413,9 @@ function render() {
         <span class="category-badge">${escapeHtml(job.category || 'Other')}</span>
       </div>
       ${job.skills && job.skills.length ? '<div class="skills">' + job.skills.map(s => '<span class="skill-tag">' + escapeHtml(s) + '</span>').join('') + '</div>' : ''}
-      <div class="description collapsed" data-full="${escapeHtml(job.full_description || job.description || '')}">
-        <span class="desc-text">${escapeHtml(job.description || '')}</span>
+      <div class="description">
+        <span>${escapeHtml(job.full_description || job.description || '')}</span>
       </div>
-      <div class="description">${escapeHtml(job.description || '')}</div>
       <div class="card-footer">
         <a href="${escapeHtml(job.url || '#')}" class="apply-btn" target="_blank" rel="noopener">Apply</a>
         <span class="powered">via ${escapeHtml(job.source || 'Unknown')}</span>
@@ -495,38 +465,6 @@ setInterval(async () => {
 
 // ─── Init ───
 fetchJobs();
-
-// ─── Expand / Collapse ───
-document.getElementById('jobGrid').addEventListener('click', function(e) {
-  const desc = e.target.closest('.description');
-  if (!desc) return;
-
-  const fullDesc = desc.dataset.full;
-  const textSpan = desc.querySelector('.desc-text');
-  if (!fullDesc || !textSpan) return;
-
-  if (desc.classList.contains('collapsed')) {
-    // Expand
-    const isLonger = fullDesc.length > (textSpan.textContent.length || 0);
-    if (isLonger) {
-      desc.classList.remove('collapsed');
-      textSpan.textContent = fullDesc;
-      // Add collapse hint
-      if (!desc.querySelector('.collapse-hint')) {
-        const hint = document.createElement('span');
-        hint.className = 'collapse-hint';
-        hint.textContent = '▲ show less';
-        desc.appendChild(hint);
-      }
-    }
-  } else {
-    // Collapse
-    desc.classList.add('collapsed');
-    textSpan.textContent = fullDesc.slice(0, 200) + '…';
-    const hint = desc.querySelector('.collapse-hint');
-    if (hint) hint.remove();
-  }
-});
 
 // ─── Helper ───
 function escapeHtml(text) {
